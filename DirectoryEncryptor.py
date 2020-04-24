@@ -27,9 +27,9 @@ def encrypt():
     f = Fernet(key)
     mail_content = 'key.key'
     #The mail addresses and password
-    sender_address = 'bsemail1298@gmail.com'
-    sender_pass = 'Shivam123'
-    receiver_address = 'bseemail1298@gmail.com'
+    sender_address = 'email@gmail.com'
+    sender_pass = ''
+    receiver_address = 'email@gmail.com'
     #Setup the MIME
     message = MIMEMultipart()
     message['From'] = sender_address
