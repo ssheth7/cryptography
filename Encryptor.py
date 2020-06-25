@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import sys, argparse, os
 from cryptography.hazmat.primitives import hashes, serialization as crypto_serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
@@ -22,14 +23,18 @@ def rsaEncrypt(inputfile, outputfile, remove):
     with open(inputfile, 'rb') as plain:
         data = plain.read()
         public_key = private_key.public_key()
-        encoded = public_key.encrypt(
-        data,
-        padding.OAEP(
-        mgf=padding.MGF1(algorithm=hashes.SHA256()),
-        algorithm=hashes.SHA256(),
-        label=None
-                )
-        )
+        try:
+            encoded = public_key.encrypt(
+            data,
+            padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
+                    )
+            )
+        except ValueError:
+            print("Your input file is too big for RSA encryption. Instead, encrypt the input file with symmetrical encryption, and then encrypt the key using RSA encryption")
+            sys.exit(1)
         if(inputfile == outputfile):
             if(remove): 
                 with open(inputfile, 'wb') as plain: plain.write(encoded)
@@ -62,7 +67,7 @@ def encrypt(input, output, remove):
     with open("sym.key", "wb") as key_file:
         key_file.write(key)
 #Decryption Methods
-def DecryptFile(input, output, f):
+def DecryptFile(input, output, f, remove):
     with open(input, 'rb') as file: file_data = file.read()
     try:
         decrypted_data = f.decrypt(file_data)
@@ -84,8 +89,9 @@ def decrypt(input, output, key, remove):
         sys.exit()
     try:
         f = Fernet(plainkey)
-        return DecryptFile(input, output,f)
-    except:
+        return DecryptFile(input, output,f, remove)
+    except Exception as e:
+        print(e)
         return rsaDecrypt(input, output, key, remove)
     
 def rsaDecrypt(input, output, key, remove):
@@ -169,7 +175,6 @@ def main(argv):
     parser._action_groups.append(optional) 
     args = parser.parse_args()
     #Move if statements to ConflictCheck
-    print(args)
     if (not len(sys.argv) > 1):
         parser.print_help(sys.stderr)
         sys.exit(1) 
@@ -181,7 +186,7 @@ def main(argv):
             open(args.o, 'w')    
         override = encrypt(args.inputfile, args.o, args.remove)
     elif(args.asymmetric):
-        override = rsaEncrypt(args.inputfile, args.o, args.remove)
+        override = rsaEncrypt(args.inputfile, args.o, args.remove) 
     elif(args.d is not None):
         if(not path.exists(args.o) and args.o != ''):
             open(args.o, 'w') 
